@@ -1,0 +1,98 @@
+version: "3.5"
+
+networks:
+  penpot:
+
+volumes:
+  penpot_postgres_data:
+  penpot_assets_data:
+
+services:
+  penpot-frontend:
+    image: "penpotapp/frontend:latest"
+    container_name: penpot-frontend
+    ports:
+      - 9001:80
+
+    volumes:
+      - penpot_assets_data:/opt/data
+
+    env_file:
+      - config.env
+
+    depends_on:
+      - penpot-backend
+      - penpot-exporter
+
+    networks:
+      - penpot
+
+  penpot-backend:
+    image: "penpotapp/backend:latest"
+    container_name: penpot-backend
+    volumes:
+      - penpot_assets_data:/opt/data
+
+    depends_on:
+      - penpot-postgres
+      - penpot-redis
+
+    env_file:
+      - config.env
+
+    networks:
+      - penpot
+
+  penpot-exporter:
+    image: "penpotapp/exporter:latest"
+    container_name: penpot-exporter
+    environment:
+      # Don't touch it; this uses internal docker network to
+      # communicate with the frontend.
+      - PENPOT_PUBLIC_URI=https://penpot-frontend
+    networks:
+      - penpot
+
+  penpot-postgres:
+    image: "postgres:13"
+    container_name: penpot-postgres
+    restart: always
+    stop_signal: SIGINT
+
+    environment:
+      - POSTGRES_INITDB_ARGS=--data-checksums
+      - POSTGRES_DB=penpot
+      - POSTGRES_USER=penpot
+      - POSTGRES_PASSWORD=penpot
+
+    volumes:
+      #- penpot_postgres_data:/var/lib/postgresql/data
+      - penpot_postgres_data:/var/lib/docker/volumes/postgresql/data
+
+    networks:
+      - penpot
+
+  penpot-redis:
+    image: redis:6
+    container_name: penpot-redis
+    restart: always
+    networks:
+      - penpot
+
+  caddy:
+    image: caddy:2
+    container_name: penpot-caddy
+    restart: always
+    ports:
+      - 80:80  # Needed for the ACME HTTP-01 challenge.
+      - 443:443
+    volumes:
+      - /root/penpot/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /root/penpot/caddy-config:/config
+      - /root/penpot/caddy-data:/data
+    environment:
+      - DOMAIN=${PENPOT_PUBLIC_URI}
+      - EMAIL=${ACME_EMAIL}   # The email address to use for ACME registration.
+      - LOG_FILE=/data/access.log
+    networks:
+      - penpot

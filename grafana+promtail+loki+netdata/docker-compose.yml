@@ -1,0 +1,84 @@
+version: "3"
+
+networks:
+  loki:
+    name: loki
+    #driver: bridge
+
+services:
+
+  netdata:
+    image: netdata/netdata
+    container_name: netdata
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - '19999:19999'
+    networks:
+      - loki
+
+  influxdb:
+    image: influxdb:1.8
+    container_name: influxdb
+    volumes:
+      - 'influxdb-storage:/var/lib/influxdb'
+    ports:
+      - '127.0.0.1:8086:8086'
+    restart: always
+    networks:
+      - loki
+
+  loki:
+    image: grafana/loki:2.4.2
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - loki
+
+  promtail:
+    image: grafana/promtail:2.4.2
+    container_name: promtail
+    volumes:
+      - /var/log:/var/log
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - loki
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    volumes:
+      - 'grafana-storage:/var/lib/grafana'
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+    ports:
+      - "3000:3000"
+    networks:
+      - loki
+
+  netdata-grabber:
+    image: terorie/netdata-influx
+    container_name: netdata-influx
+    environment:
+      - NI_INFLUX_ADDR=http://influxdb:8086
+      - NI_INFLUX_DB=netdata
+      - NI_NETDATA_API=https://netdata:19999/api
+      - NI_HOST_TAG=localhost-main
+      - NI_CHARTS=system.cpu system.net system.pgpgio
+    restart: always
+    networks:
+      - loki
+
+volumes:
+  grafana-storage:
+  influxdb-storage:

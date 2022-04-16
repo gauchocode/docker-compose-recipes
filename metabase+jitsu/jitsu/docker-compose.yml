@@ -1,0 +1,71 @@
+version: "2.3"
+
+services:
+
+  db:
+    container_name: jitsu_db
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - ${POSTGRES_HOST_PORT}:${POSTGRES_PORT}
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    networks:
+      - metabase-network
+
+  jitsu:
+    container_name: jitsu
+    image: jitsucom/jitsu
+    environment:
+      - REDIS_URL=redis://redis:6379
+      #Retroactive users recognition can affect RAM significant. Read more about the solution https://jitsu.com/docs/other-features/retroactive-user-recognition
+      - USER_RECOGNITION_ENABLED=true
+      - USER_RECOGNITION_REDIS_URL=redis://redis_users_recognition:6380
+      - TERM=xterm-256color
+    depends_on:
+      - redis
+      - db
+    volumes:
+      - ./compose-data/configurator/data/logs:/home/configurator/data/logs
+      - ./compose-data/server/data/logs:/home/eventnative/data/logs
+      - ./compose-data/server/data/logs/events:/home/eventnative/data/logs/events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - workspace:/home/eventnative/data/airbyte
+    restart: always
+    ports:
+      - "8000:8000"
+    networks:
+      - metabase-network
+
+  redis:
+    container_name: jitsu_redis
+    image: redis:6.2.6-bullseye
+    volumes:
+      - ./compose-data/redis/data:/data
+    restart: always
+    networks:
+      - metabase-network
+
+  redis_users_recognition:
+    container_name: jitsu_redis_users_recognition
+    image: redis:6.2.6-bullseye
+    volumes:
+      - ./compose-data/redis_users_recognition/data:/data
+      - ./compose-data/redis_users_recognition/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    restart: always
+    networks:
+      - metabase-network
+
+volumes:
+  workspace:
+    name: jitsu_workspace
+
+networks:
+  metabase-network:
+    name: metabase-network
+    driver: bridge

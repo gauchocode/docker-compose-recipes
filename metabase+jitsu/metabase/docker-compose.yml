@@ -1,0 +1,43 @@
+version: '3.5'
+
+services:
+
+    db:
+      container_name: metabase_db
+      image: postgres
+      restart: always
+      environment:
+        - POSTGRES_DB=${POSTGRES_DB}
+        - POSTGRES_USER=${POSTGRES_USER}
+        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      ports:
+        - ${POSTGRES_HOST_PORT}:${POSTGRES_PORT}
+      volumes:
+        - ./db-data:/var/lib/postgresql/data
+      networks:
+        - metabase-network
+
+    metabase:
+      container_name: metabase
+      volumes:
+        - ./metabase-data:/metabase-data
+      environment:
+        - MB_DB_TYPE=postgres
+        - MB_DB_HOST=db
+        - MB_DB_PORT=${POSTGRES_PORT}
+        - MB_DB_DBNAME=${POSTGRES_DB}
+        - MB_DB_USER=${POSTGRES_USER}
+        - MB_DB_PASS=${POSTGRES_PASSWORD}
+      ports:
+        - 3000:3000
+      image: metabase/metabase
+      restart: always
+      depends_on: 
+        - db
+      networks:
+        - metabase-network
+
+networks:
+  metabase-network:
+    name: metabase-network
+    driver: bridge

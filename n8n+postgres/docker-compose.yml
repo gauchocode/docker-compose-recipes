@@ -1,0 +1,79 @@
+version: "3.1"
+
+services:
+
+  postgres:
+    image: postgres:11
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_NON_ROOT_USER
+      - POSTGRES_NON_ROOT_PASSWORD
+    volumes:
+      - ./init-data.sh:/docker-entrypoint-initdb.d/init-data.sh
+      - ~/.n8n/db:/var/lib/postgresql/data:rw
+
+  traefik:
+    image: "traefik"
+    restart: always
+    command:
+      - "--api=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.mytlschallenge.acme.tlschallenge=true"
+      - "--certificatesresolvers.mytlschallenge.acme.email=${SSL_EMAIL}"
+      - "--certificatesresolvers.mytlschallenge.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "443:443"
+    volumes:
+      - ${DATA_FOLDER}/letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  n8n:
+    image: n8nio/n8n
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.n8n.rule=Host(`n8n.domain.com`)
+      - traefik.http.routers.n8n.tls=true
+      - traefik.http.routers.n8n.entrypoints=websecure
+      - traefik.http.routers.n8n.tls.certresolver=mytlschallenge
+      - traefik.http.middlewares.n8n.headers.SSLRedirect=true
+      - traefik.http.middlewares.n8n.headers.STSSeconds=315360000
+      - traefik.http.middlewares.n8n.headers.browserXSSFilter=true
+      - traefik.http.middlewares.n8n.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.n8n.headers.forceSTSHeader=true
+      - traefik.http.middlewares.n8n.headers.SSLHost=broobe.com
+      - traefik.http.middlewares.n8n.headers.STSIncludeSubdomains=true
+      - traefik.http.middlewares.n8n.headers.STSPreload=true
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
+      - DB_POSTGRESDB_USER=${POSTGRES_NON_ROOT_USER}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_NON_ROOT_PASSWORD}
+      #- N8N_BASIC_AUTH_ACTIVE=true
+      #- N8N_BASIC_AUTH_USER
+      #- N8N_BASIC_AUTH_PASSWORD
+      - N8N_HOST=${SUBDOMAIN}.${DOMAIN_NAME}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - NODE_ENV=production
+      - WEBHOOK_TUNNEL_URL=https://${SUBDOMAIN}.${DOMAIN_NAME}/
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+      - N8N_EMAIL_MODE=smtp
+      - N8N_SMTP_HOST=${N8N_SMTP_HOST}
+      - N8N_SMTP_PORT=${N8N_SMTP_PORT}
+      - N8N_SMTP_USER=${N8N_SMTP_USER}
+      - N8N_SMTP_PASS=${N8N_SMTP_PASS}
+      - N8N_SMTP_SENDER=${N8N_SMTP_SENDER}
+      - N8N_SMTP_SSL=${N8N_SMTP_SSL}
+    ports:
+      - 5678:5678
+    volumes:
+      - ~/.n8n/n8n:/home/node/.n8n
