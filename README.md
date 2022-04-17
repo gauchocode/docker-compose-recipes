@@ -2,7 +2,7 @@
 Similar idea https://github.com/docker/awesome-compose
 
 ## :gear: Installation
-Clone repo and install docker and docker-compose:
+Install docker and docker-compose and clone repo:
 
 ```
 sudo apt install docker.io docker-compose
@@ -27,6 +27,7 @@ docker-compose up -d
 ```
 
 ## :compass: TODO List
+* Better documentation.
 * More docker compose-recipes.
 * More installation variants from the existing recipes.
 
