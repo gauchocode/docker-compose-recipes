@@ -1,41 +1,24 @@
-# Introducción
+# Grafana, Promtail, Loki & Netdata
+Grafana is an open source data visualization platform which is primarily used for displaying metrics dashboards. It can aggregate, query, and display data from multiple sources such as Graphite, Prometheus, or MySQL.
 
-Grafana, Promtail y Loki es un estandard para el monitoreo de servidores.
-Como complemento, esta receta contiene Netdata con persistencia de datos en influxdb, la cual se puede agregar como data source a Grafana.
+## Configuration
+No configuration required.
 
-## Consideraciones
-Para loguearse a Grafana visitar: http://<your_ip>:3000
-Loguearse con: admin:admin
-
-Funciona con influxdb:1.8, a partir de influxdb:2.0 no funciona la integración con Grafana.
-
-Cuando se inicia por primera vez, es necesario crear la base en influxdb con el siguiente comando:
-
+## Installation
 ```
-curl -i -XPOST http://localhost:8086/query --data-urlencode "q=CREATE DATABASE netdata"
+cd grafana+promtail+loki+netdata
+docker-compose pull && docker-compose up -d
 ```
 
-Para agregarlo como data source:
-
-URL: http://influxdb:8086, o http://user:pass@influxdb:8086
+## Considerations
+* Grafana works with influxdb:1.8, dont works properly with influxdb:2.0+
+* Grafana login: http://<your_ip>:3000
+* Default first login: admin:admin
+* We will neet to create a database in influxdb with the next command:
+    ```
+    curl -i -XPOST http://localhost:8086/query --data-urlencode "q=CREATE DATABASE netdata"
+    ```
+* And add it as datasource:
+URL: http://influxdb:8086, or http://user:pass@influxdb:8086
 Database: netdata
-
-Importamos el dashboard con ID 10922.
-
-## Comandos
-Adentro de cada una de las carpetas ejecutamos:
-
-### Para descargar imágenes
-```
-docker-compose pull
-```
-
-### Para detener y borrar las imagenes actuales (si es que hay alguna corriendo)
-```
-docker-compose stop && docker-compose rm
-```
-
-### Levantamos la nueva instancia
-```
-docker-compose up -d
-```
+Then you can add the dashboard with ID: 10922

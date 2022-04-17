@@ -1,9 +1,15 @@
 # Appsmith
-Low-code framework.
+Low code project to build admin panels, internal tools, and dashboards. Integrates with 15+ databases and any API.
 
-## Instalation
+* Official repo: https://github.com/appsmithorg/appsmith
+
+## Configuration
+No configuration required.
+
+## Installation
 ```
-docker-compose up -d
+cd appsmith
+docker-compose pull && docker-compose up -d
 ```
 
 ## Logs
