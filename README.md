@@ -1,18 +1,23 @@
 # Docker Compose Recipes
 Similar idea https://github.com/docker/awesome-compose
 
-## :gear: Installation
-Install docker and docker-compose and clone repo:
+## :gear: Prerequisites
+Install docker and docker-compose. On debian-based system you can use:
 
 ```
 sudo apt install docker.io docker-compose
-git clone https://gitlab.com/broobe/docker-compose-samples.git
 ```
 ## :triangular_flag_on_post: First steps
 
 ```
+# Clone repo
+git clone https://gitlab.com/broobe/docker-compose-samples.git
+
 # Go to the tool we want to install. Example:
 cd docker-compose-samples/vaultwarden
+
+# Read readme.md
+cat readme.md
 
 # Edit .env
 vim .env
