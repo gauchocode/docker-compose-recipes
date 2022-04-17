@@ -11,10 +11,8 @@ git clone https://gitlab.com/broobe/docker-compose-samples.git
 ## :triangular_flag_on_post: First steps
 
 ```
-cd docker-compose-samples
-
 # Go to the tool we want to install. Example:
-cd vaultwarden
+cd docker-compose-samples/vaultwarden
 
 # Edit .env
 vim .env

@@ -1,11 +1,4 @@
-# Usage
-#   Start:          docker-compose up
-#   With helpers:   docker-compose -f docker-compose.yml -f ./dev/docker-compose.dev.yml up
-#   Stop:           docker-compose down
-#   Destroy:        docker-compose -f docker-compose.yml -f ./dev/docker-compose.dev.yml down -v --remove-orphans
-#
 # Based on: https://github.com/supabase/supabase/blob/master/docker/docker-compose.yml
-
 version: "3.8"
 
 services:
@@ -18,7 +11,6 @@ services:
     environment:
       STUDIO_PG_META_URL: http://meta:8080
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-
       SUPABASE_URL: http://kong:8000
       SUPABASE_REST_URL: ${PUBLIC_REST_URL}
       SUPABASE_ANON_KEY: ${ANON_KEY}
