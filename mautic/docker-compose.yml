@@ -29,7 +29,7 @@ services:
     networks:
       - mautic-net
     ports:
-      - "8080:80"
+      - "80:80"
 
 #volumes:
 #  database:
