@@ -1,0 +1,41 @@
+version: "2"
+
+services:
+  database:
+    image: powertic/percona-docker
+    container_name: database
+    environment:
+      MYSQL_ROOT_PASSWORD: mypassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./database:/var/lib/mysql
+    restart: always
+    networks:
+      - mautic-net
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --sql-mode=""
+
+  mautic:
+    container_name: mautic
+    image: mautic/mautic:v4-apache
+    volumes:
+      - ./mautic_data:/var/www/html
+    environment:
+      - MAUTIC_DB_HOST=database
+      - MAUTIC_DB_USER=root
+      - MAUTIC_DB_PASSWORD=mypassword
+      - MAUTIC_DB_NAME=mautic4
+    restart: always
+    networks:
+      - mautic-net
+    ports:
+      - "8080:80"
+
+#volumes:
+#  database:
+#    driver: local
+#  mautic_data:
+#    driver: local
+networks:
+  mautic-net:
+    driver: bridge
