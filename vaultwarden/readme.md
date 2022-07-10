@@ -16,9 +16,11 @@ SMTP_HOST=
 
 ### Option 1: with Caddy inside docker stack
 ```
-cd vaultwarden+caddy
+cd vaultwarden
 docker-compose pull && docker-compose up -d
 ```
+
+If you change vaultwarden port, you need to change it on Caddyfile too.
 
 ### Option 2: with nginx installed on host
 1. Comment "caddy" service part on docker-compose.yml.
@@ -28,6 +30,8 @@ docker-compose pull && docker-compose up -d
 5. Create symbolic link on **/etc/nginx/sites-enabled**
 6. Reload nginx: **service nginx reload**
 7. Install certbot and run: **certbot --nginx -d vaultwarden.domain.com**
+
+If you change vaultwarden port, you need to change it on nginx.conf too.
 
 ## Logs
 ```

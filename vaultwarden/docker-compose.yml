@@ -16,6 +16,8 @@ services:
       - SMTP_USERNAME=${SMTP_USERNAME}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       - ADMIN_TOKEN=${ADMIN_TOKEN}
+    ports:
+      - 8097:80
     volumes:
       - ${DATA_FOLDER}:/data
 

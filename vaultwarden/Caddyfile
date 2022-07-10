@@ -19,7 +19,7 @@
   reverse_proxy /notifications/hub vaultwarden:3012
 
   # Proxy everything else to Rocket
-  reverse_proxy vaultwarden:80 {
+  reverse_proxy vaultwarden:8097 {
        # Send the true remote IP to Rocket, so that vaultwarden can put this in the
        # log, so that fail2ban can ban the correct IP.
        header_up X-Real-IP {remote_host}
