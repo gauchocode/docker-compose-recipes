@@ -5,7 +5,10 @@ Deploy a no-code admin panel for any application in less than a minute. Search, 
 
 ## Installation
 
-### Option 1: on default port
+1. Crate a key base with the command: `openssl rand -hex 64`
+2. Update docker-compose.yml to add the new key on SECRET_KEY_BASE var.
+
+### Option 1: without proxy
 ```
 cd motoradmin
 docker-compose pull && docker-compose up -d
