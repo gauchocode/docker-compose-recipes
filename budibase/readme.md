@@ -4,19 +4,13 @@ Budibase is an open-source low-code platform for creating internal apps in minut
 * Official repo: https://github.com/Budibase/budibase
 
 ## Configuration
-Open .env and fill the required parameters:
-```
-DATA_FOLDER=
-BUDIBASE_PUBLIC_URI=
-JWT_SECRET=
-ACME_EMAIL=
-```
+Open .env and fill the required parameters.
 
 ## Installation
 
 ### Option 1: with Caddy inside docker stack
 ```
-cd budibase+caddy
+cd budibase
 docker-compose pull && docker-compose up -d
 ```
 
