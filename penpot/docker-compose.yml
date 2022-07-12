@@ -1,12 +1,5 @@
 version: "3.5"
 
-networks:
-  penpot:
-
-volumes:
-  penpot_postgres_data:
-  penpot_assets_data:
-
 services:
   penpot-frontend:
     image: "penpotapp/frontend:latest"
@@ -87,12 +80,19 @@ services:
       - 80:80  # Needed for the ACME HTTP-01 challenge.
       - 443:443
     volumes:
-      - /root/penpot/Caddyfile:/etc/caddy/Caddyfile:ro
-      - /root/penpot/caddy-config:/config
-      - /root/penpot/caddy-data:/data
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy-config:/config
+      - ./caddy-data:/data
     environment:
       - DOMAIN=${PENPOT_PUBLIC_URI}
       - EMAIL=${ACME_EMAIL}   # The email address to use for ACME registration.
       - LOG_FILE=/data/access.log
     networks:
       - penpot
+
+networks:
+  penpot:
+
+volumes:
+  penpot_postgres_data:
+  penpot_assets_data:
