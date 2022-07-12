@@ -31,6 +31,7 @@ docker-compose up -d
 
 ## :compass: TODO List
 * Better documentation.
+* Move all application vars to a .env file.
 * More docker compose-recipes.
 * More installation variants from the existing recipes.
 
