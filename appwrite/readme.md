@@ -3,6 +3,8 @@ A complete backend solution for your [Flutter / Vue / Angular / React / iOS / An
 
 * Official repo: https://github.com/appwrite/lite
 
+* More resources: https://github.com/appwrite/awesome-appwrite
+
 ## Configuration
 Open .env and fill the required parameters.
 
