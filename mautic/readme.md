@@ -4,10 +4,7 @@ Mautic provides free and open source marketing automation software available to 
 * Official repo: https://github.com/mautic/mautic
 
 ## Configuration
-Open .env and fill the required parameters:
-```
-DATA_FOLDER=
-```
+Open .env and fill the required parameters.
 
 ## Installation
 
@@ -18,7 +15,7 @@ docker-compose pull && docker-compose up -d
 ```
 
 ### Option 2: with nginx installed on host
-1. Change Mautic host port on docker-compose.yml (could be 88 or another open port).
+1. Change Mautic host port on .env file (could be 808 or another open port).
 2. Run: **docker-compose pull**
 3. Run: **docker-compose up -d**
 4. Make a copy of nginx.conf on **/etc/nginx/sites-available**

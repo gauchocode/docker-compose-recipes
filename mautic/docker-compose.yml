@@ -1,6 +1,7 @@
 version: "2"
 
 services:
+
   database:
     image: powertic/percona-docker
     container_name: database
@@ -29,7 +30,7 @@ services:
     networks:
       - mautic-net
     ports:
-      - "80:80"
+      - "${MAUTIC_PORT}:80"
 
 #volumes:
 #  database:

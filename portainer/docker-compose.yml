@@ -1,0 +1,17 @@
+version: "2"
+
+services:
+
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
+    command: -H unix:///var/run/docker.sock
+    restart: always
+    environment:
+      - VIRTUAL_HOST=${PORTAINER_DOMAIN}
+      - VIRTUAL_PORT=${PORTAINER_PORT}
+    ports:
+      - ${PORTAINER_PORT}:9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${PORTAINER_DATA}:/data
