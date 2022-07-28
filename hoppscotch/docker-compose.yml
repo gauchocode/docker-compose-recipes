@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+
+  hoppscotch:
+    image: hoppscotch/hoppscotch:latest
+    container_name: hoppscotch
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+      BASE_URL: ${BASE_URL}
+#    volumes:
+#      - ./data/hoppscotch:/app
+    ports:
+      - "${PORT}:3000"
+#    networks:
+#      - web
+    network_mode: bridge
+#    labels:
+#      traefik.enable: true
+#      traefik.http.routers.hoppscotch.entrypoints: https
+#      traefik.http.routers.hoppscotch.rule: Host(`hoppscotch.arul.io`)
+#      traefik.http.services.hoppscotch.loadbalancer.server.port: 3000
+
+#networks:
+#  web:
+#   external: true
