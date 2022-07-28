@@ -1,0 +1,84 @@
+version: '3.3'
+
+services:
+
+  minio:
+    image: minio/minio
+    container_name: minio-typebot
+    command: server /data
+    ports:
+      - '9050:9000'
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
+    volumes:
+      - ./s3_data:/data
+      
+  # This service just makes sure a bucket with the right policies is created
+  createbuckets:
+    image: minio/mc
+    container_name: bucket-typebot
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 10;
+      /usr/bin/mc config host add minio http://${S3_ENDPOINT}:9000 ${S3_ACCESS_KEY} ${S3_SECRET_KEY};
+      /usr/bin/mc mb minio/typebot;
+      /usr/bin/mc policy set public minio/typebot/public;
+      exit 0;
+      "
+
+  typebot-db:
+    image: postgres:13
+    container_name: pg-typebot
+    restart: always
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+  
+  typebot-builder:
+    image: baptistearno/typebot-builder:latest
+    container_name: builder-typebot
+    restart: always
+    depends_on:
+      - typebot-db
+    ports:
+      - '5000:3000'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    # See https://docs.typebot.io/self-hosting/configuration for more configuration options
+    environment:
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY}
+      - S3_SECRET_KEY=${S3_SECRET_KEY}
+      - S3_BUCKET=${S3_BUCKET}
+      - S3_ENDPOINT=${S3_ENDPOINT} # change to your domain name
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_DB}@typebot-db:5432/${POSTGRES_PASSWORD}
+      - NEXTAUTH_URL=${BUILDER_URL}
+      - NEXT_PUBLIC_VIEWER_URL=${VIEWER_URL}
+      - ENCRYPTION_SECRET=${ENCRYPTION_SECRET}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+  
+  typebot-viewer:
+    image: baptistearno/typebot-viewer:latest
+    container_name: viewer-typebot
+    restart: always
+    ports:
+      - '5001:3000' 
+    # See https://docs.typebot.io/self-hosting/configuration for more configuration options
+    environment:
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY}
+      - S3_SECRET_KEY=${S3_SECRET_KEY}
+      - S3_BUCKET=${S3_BUCKET}
+      - S3_ENDPOINT=${S3_ENDPOINT} # change to your domain name
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_DB}@typebot-db:5432/${POSTGRES_PASSWORD}
+      - NEXT_PUBLIC_VIEWER_URL=${VIEWER_URL}
+      - ENCRYPTION_SECRET=${ENCRYPTION_SECRET}
+      
+#volumes:
+ # db_data:
+ # s3_data:
