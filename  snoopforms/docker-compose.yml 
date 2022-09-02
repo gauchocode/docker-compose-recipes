@@ -1,0 +1,25 @@
+
+version: "3.3"
+
+services:
+
+  postgres:
+    image: postgres:13-alpine
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+
+  snoopforms:
+    build: .
+    command: [sh, -c, "yarn prisma migrate deploy && yarn start"]
+    depends_on:
+      - postgres
+    ports:
+      - ${SNOOP_PORT}:3000
+    env_file:
+      - .env
+
+volumes:
+  postgres:
+    driver: local
