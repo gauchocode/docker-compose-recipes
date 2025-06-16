@@ -1,5 +1,3 @@
-version: "3.1"
-
 services:
 
   postgres:
@@ -12,45 +10,17 @@ services:
       - POSTGRES_NON_ROOT_USER
       - POSTGRES_NON_ROOT_PASSWORD
     volumes:
-      - ./init-data.sh:/docker-entrypoint-initdb.d/init-data.sh
       - ./.n8n/db:/var/lib/postgresql/data:rw
-
-  traefik:
-    image: "traefik"
-    restart: always
-    command:
-      - "--api=true"
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.mytlschallenge.acme.tlschallenge=true"
-      - "--certificatesresolvers.mytlschallenge.acme.email=${SSL_EMAIL}"
-      - "--certificatesresolvers.mytlschallenge.acme.storage=/letsencrypt/acme.json"
-    ports:
-      - "443:443"
-    volumes:
-      - ./letsencrypt:/letsencrypt
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./init-data.sh:/docker-entrypoint-initdb.d/init-data.sh
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   n8n:
-    image: n8nio/n8n
-    container_name: n8n
+    image: n8nio/n8n:1.99.0
     restart: unless-stopped
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.n8n.rule=Host(`n8n.domain.com`)
-      - traefik.http.routers.n8n.tls=true
-      - traefik.http.routers.n8n.entrypoints=websecure
-      - traefik.http.routers.n8n.tls.certresolver=mytlschallenge
-      - traefik.http.middlewares.n8n.headers.SSLRedirect=true
-      - traefik.http.middlewares.n8n.headers.STSSeconds=315360000
-      - traefik.http.middlewares.n8n.headers.browserXSSFilter=true
-      - traefik.http.middlewares.n8n.headers.contentTypeNosniff=true
-      - traefik.http.middlewares.n8n.headers.forceSTSHeader=true
-      - traefik.http.middlewares.n8n.headers.SSLHost=broobe.com
-      - traefik.http.middlewares.n8n.headers.STSIncludeSubdomains=true
-      - traefik.http.middlewares.n8n.headers.STSPreload=true
     environment:
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=postgres
@@ -58,23 +28,46 @@ services:
       - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
       - DB_POSTGRESDB_USER=${POSTGRES_NON_ROOT_USER}
       - DB_POSTGRESDB_PASSWORD=${POSTGRES_NON_ROOT_PASSWORD}
-      #- N8N_BASIC_AUTH_ACTIVE=true
-      #- N8N_BASIC_AUTH_USER
-      #- N8N_BASIC_AUTH_PASSWORD
       - N8N_HOST=${SUBDOMAIN}.${DOMAIN_NAME}
       - N8N_PORT=5678
       - N8N_PROTOCOL=https
       - NODE_ENV=production
-      - WEBHOOK_TUNNEL_URL=https://${SUBDOMAIN}.${DOMAIN_NAME}/
+      - WEBHOOK_URL=https://${SUBDOMAIN}.${DOMAIN_NAME}/
       - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
-      - N8N_EMAIL_MODE=smtp
+      - N8N_EDITOR_BASE_URL=https://${SUBDOMAIN}.${DOMAIN_NAME}
+      - N8N_PUSH_BACKEND=${N8N_PUSH_BACKEND}
+      - N8N_EMAIL_MODE=${N8N_EMAIL_MODE}
       - N8N_SMTP_HOST=${N8N_SMTP_HOST}
       - N8N_SMTP_PORT=${N8N_SMTP_PORT}
       - N8N_SMTP_USER=${N8N_SMTP_USER}
       - N8N_SMTP_PASS=${N8N_SMTP_PASS}
       - N8N_SMTP_SENDER=${N8N_SMTP_SENDER}
       - N8N_SMTP_SSL=${N8N_SMTP_SSL}
+      - N8N_PUSH_BACKEND=sse
+      - N8N_PROXY_HOPS=1
+      - NODE_FUNCTION_ALLOW_EXTERNAL=crypto-js
+      - NODE_OPTIONS=--max_old_space_size=8000
+      - N8N_DEFAULT_BINARY_DATA_MODE=filesystem
+      #- N8N_ENCRYPTION_KEY=24g3aOMEelZdclCd/R/0uO/CdO1nesBh4049M1sfcD4=
     ports:
-      - 5678:5678
+      - ${N8N_PORT}:5678
+    links:
+      - postgres
     volumes:
       - ./.n8n/n8n:/home/node/.n8n
+        # clave ssh del server, tiene que estar creada y agregaga a gitlab
+      - /root/.ssh:/home/node/.ssh
+        # es el repo donde se suben los workflows de este projecto
+      - /root/automate-workflows:/data/automate-workflows
+      - ./claves:/home/node/claves
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  redis:
+    image: 'redis:6.0-alpine'
+    container_name: redis
+    restart: unless-stopped
+    volumes:
+        - ./redis:/data
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
